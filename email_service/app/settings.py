@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 """Settings module for email service"""
 
-from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field, HttpUrl
 
