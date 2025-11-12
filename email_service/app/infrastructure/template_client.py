@@ -10,7 +10,7 @@ _settings = get_settings()
 
 class TemplateClient:
     def __init__(self, session: Optional[aiohttp.ClientSession] = None) -> None:
-        self.base_url = _settings.template_service_url.rstrip("/")
+        self.base_url = str(_settings.template_service_url).rstrip("/")
         self.session = session
 
     async def render(self, payload: NotificationPayload, correlation_id: Optional[str] = None) -> Dict[str, Any]:

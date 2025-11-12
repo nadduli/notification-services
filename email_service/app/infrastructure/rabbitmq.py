@@ -12,7 +12,7 @@ _connection: RobustConnection | None = None
 async def get_connection() -> RobustConnection:
     global _connection
     if _connection is None:
-        _connection = await connect_robust(_settings.rabbitmq_url)
+        _connection = await connect_robust(_settings.rabbitmq_connection_url)
     return _connection
 
 

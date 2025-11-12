@@ -1,7 +1,7 @@
 # Web Framework
 fastapi
 uvicorn[standard]
-pydantic
+pydantic[email]
 pydantic-settings
 aio-pika
 redis[hiredis]

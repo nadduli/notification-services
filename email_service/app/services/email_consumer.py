@@ -77,7 +77,7 @@ class EmailQueueConsumer:
                     )
 
                     recipient = payload.metadata.recipient_email
-                    subject = rendered.get("subject") or payload.metadata.extra.get("subject", "")
+                    subject = rendered.get("subject") or (payload.metadata.extra or {}).get("subject", "")
                     body = rendered.get("body")
 
                     await self.breaker.call(
