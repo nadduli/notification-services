@@ -1,8 +1,0 @@
-fastapi
-uvicorn[standard]
-pydantic
-aio_pika
-sqlmodel
-asyncpg
-python-dotenv
-loguru
