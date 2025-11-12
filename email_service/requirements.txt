@@ -1,0 +1,15 @@
+# Web Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+aio-pika
+redis[hiredis]
+aiobreaker
+aiosmtplib
+aiohttp
+prometheus-fastapi-instrumentator
+structlog
+pytest
+pytest-asyncio
+pytest-mock
