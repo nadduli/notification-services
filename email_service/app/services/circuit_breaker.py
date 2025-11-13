@@ -11,8 +11,6 @@ _settings = get_settings()
 
 class AsyncCircuitBreaker:
     def __init__(self, fail_max: int | None = None, reset_timeout: int | None = None) -> None:
-        # aiobreaker uses 'fail_max' and 'timeout' as positional or keyword args
-        # timeout is in seconds for reset period
         self.breaker = CircuitBreaker(
             fail_max or _settings.circuit_breaker_fail_max,
             reset_timeout or _settings.circuit_breaker_reset_timeout,

@@ -16,8 +16,8 @@ class TemplateClient:
     async def render(self, payload: NotificationPayload, correlation_id: Optional[str] = None) -> Dict[str, Any]:
         body = {
             "template_code": payload.template_code,
-            "variables": payload.variables.model_dump(),
-            "metadata": payload.metadata.model_dump(),
+            "variables": payload.variables.model_dump(mode="json"),
+            "metadata": payload.metadata.model_dump(mode="json"),
             "locale": payload.metadata.locale,
         }
         headers = {

@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, Optional
 
-from aio_pika import ExchangeType, IncomingMessage, Message
+from aio_pika import ExchangeType, IncomingMessage, Message, RobustChannel
 from structlog import get_logger
 
 from app.domain.schemas import NotificationPayload, NotificationStatus
@@ -24,9 +24,12 @@ class EmailQueueConsumer:
         self.template_client = template_client
         self.sender = EmailSender()
         self.breaker = AsyncCircuitBreaker()
+        self.channel: RobustChannel | None = None
+        self.retry_exchange = None
 
     async def start(self) -> None:
         channel = await get_channel()
+        self.channel = channel
         await ensure_core_exchanges(channel)
 
         queue = await channel.declare_queue(
@@ -40,6 +43,8 @@ class EmailQueueConsumer:
 
         notifications_exchange = await channel.get_exchange(settings.notifications_exchange)
         await queue.bind(notifications_exchange, routing_key="email")
+
+        self.retry_exchange = await channel.get_exchange(settings.rabbitmq_retry_exchange)
 
         await queue.consume(self._process_message, no_ack=False)
 
@@ -85,7 +90,7 @@ class EmailQueueConsumer:
                         recipient=recipient,
                         subject=subject,
                         body=body,
-                        metadata=payload.metadata.model_dump(),
+                        metadata=payload.metadata.model_dump(mode="json"),
                     )
             except Exception as exc:
                 log.exception("email.consumer.failed", error=str(exc))
@@ -114,7 +119,12 @@ class EmailQueueConsumer:
             "x-error": str(exc),
         }
 
-        retry_exchange = await message.channel.get_exchange(settings.rabbitmq_retry_exchange)
+        retry_exchange = self.retry_exchange
+        if retry_exchange is None or getattr(retry_exchange, "is_closed", False):
+            if self.channel is None or self.channel.is_closed:
+                self.channel = await get_channel()
+            retry_exchange = await self.channel.get_exchange(settings.rabbitmq_retry_exchange)
+            self.retry_exchange = retry_exchange
         retry_message = Message(
             body=message.body,
             headers=new_headers,
@@ -124,7 +134,6 @@ class EmailQueueConsumer:
         await retry_exchange.publish(
             retry_message,
             routing_key=settings.rabbitmq_email_queue,
-            declare=[(settings.rabbitmq_retry_exchange, ExchangeType.DIRECT)],
         )
 
     async def _publish_status_event(
